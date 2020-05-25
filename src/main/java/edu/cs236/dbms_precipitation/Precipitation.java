@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,7 +65,9 @@ public class Precipitation {
 				} else if (multiplier == 'H' || multiplier == 'I') {
 					prcpDouble = (double) 0;
 				}
-				rows.add(RowFactory.create(arrOfStr[0], arrOfStr[2].substring(4, 6), prcpDouble));
+				rows.add(RowFactory.create(arrOfStr[0],
+						new DateFormatSymbols().getMonths()[Integer.parseInt(arrOfStr[2].substring(4, 6)) - 1],
+						prcpDouble));
 			}
 		}
 		return sparkSession.createDataFrame(rows, structType);
@@ -95,19 +98,18 @@ public class Precipitation {
 		Dataset<Row> minStateRecords = sparkSession.sql(
 				"SELECT STATION_RECORDS.STATE, STATION_RECORDS.MNTH, STATION_RECORDS.AVG_PRCP AS AVG_MIN FROM STATION_RECORDS, MIN_RECORDS WHERE STATION_RECORDS.STATE = MIN_RECORDS.STATE AND STATION_RECORDS.AVG_PRCP = MIN_RECORDS.AVG_PRCP ORDER BY STATION_RECORDS.STATE");
 		minStateRecords.createTempView("MIN_STATE_RECORDS");
-//		System.out.println("------------------MIN_STATE_RECORDS------------------");
-//		minStateRecords.show(999);
 
 		Dataset<Row> maxStateRecords = sparkSession.sql(
 				"SELECT STATION_RECORDS.STATE, STATION_RECORDS.MNTH, STATION_RECORDS.AVG_PRCP AS AVG_MAX FROM STATION_RECORDS, MAX_RECORDS WHERE STATION_RECORDS.STATE = MAX_RECORDS.STATE AND STATION_RECORDS.AVG_PRCP = MAX_RECORDS.AVG_PRCP ORDER BY STATION_RECORDS.STATE");
 		maxStateRecords.createTempView("MAX_STATE_RECORDS"); //
-//		System.out.println("------------------MAX_STATE_RECORDS------------------");
-//		  maxStateRecords.show(999);
 
 		Dataset<Row> minMaxRecords = sparkSession.sql(
 				"SELECT MIN_STATE_RECORDS.STATE, MIN_STATE_RECORDS.MNTH AS MIN_MNTH, MIN_STATE_RECORDS.AVG_MIN, MAX_STATE_RECORDS.MNTH AS MAX_MNTH, MAX_STATE_RECORDS.AVG_MAX FROM MIN_STATE_RECORDS, MAX_STATE_RECORDS WHERE MIN_STATE_RECORDS.STATE = MAX_STATE_RECORDS.STATE");
 		minMaxRecords.createTempView("MIN_MAX_RECORDS");
-		minMaxRecords.show(999);
 
+		Dataset<Row> avgDifference = sparkSession.sql(
+				"SELECT MMR.STATE, MMR.MIN_MNTH, MMR.AVG_MIN, MMR.MAX_MNTH, MMR.AVG_MAX, MMR.AVG_MAX-MMR.AVG_MIN AS DIFFERENCE FROM MIN_MAX_RECORDS AS MMR ORDER BY DIFFERENCE");
+		avgDifference.createTempView("AVG_DIFFERENCE");
+		avgDifference.show(999);
 	}
 }
