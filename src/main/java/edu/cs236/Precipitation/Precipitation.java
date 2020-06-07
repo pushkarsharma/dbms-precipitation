@@ -80,45 +80,26 @@ public class Precipitation {
 
 		weatherStations.createTempView("WEATHER_STATIONS");
 
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 		Dataset<Row> records = Precipitation.annualRecord(args[1]);
 		records.createTempView("RECORDS");
 
 		Dataset<Row> stationRecords = sparkSession.sql(
 				"SELECT STATE, MNTH, AVG(PRCP) AS AVG_PRCP FROM (SELECT * FROM WEATHER_STATIONS, RECORDS WHERE WEATHER_STATIONS.USAF = RECORDS.STN AND WEATHER_STATIONS.STATE IS NOT NULL) GROUP BY STATE, MNTH ORDER BY STATE, MNTH");
 		stationRecords.createTempView("STATION_RECORDS");
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 
 		Dataset<Row> minRecords = sparkSession
 				.sql("SELECT STATE, MIN(AVG_PRCP) AS AVG_PRCP FROM STATION_RECORDS GROUP BY STATE ORDER BY STATE");
 		minRecords.createTempView("MIN_RECORDS");
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 
 		Dataset<Row> maxRecords = sparkSession
 				.sql("SELECT STATE, MAX(AVG_PRCP) AS AVG_PRCP FROM STATION_RECORDS GROUP BY STATE ORDER BY STATE");
 		maxRecords.createTempView("MAX_RECORDS");
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 
 		Dataset<Row> minStateRecords = sparkSession.sql(
 				"SELECT STATION_RECORDS.STATE, STATION_RECORDS.MNTH, STATION_RECORDS.AVG_PRCP AS AVG_MIN FROM STATION_RECORDS, MIN_RECORDS WHERE STATION_RECORDS.STATE = MIN_RECORDS.STATE AND STATION_RECORDS.AVG_PRCP = MIN_RECORDS.AVG_PRCP ORDER BY STATION_RECORDS.STATE");
 		minStateRecords.createTempView("MIN_STATE_RECORDS");
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 		minRecords=null;
 		System.gc();
-		System.out.println("---------------------------------------------------------------------------------------");
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 
 		Dataset<Row> maxStateRecords = sparkSession.sql(
 				"SELECT STATION_RECORDS.STATE, STATION_RECORDS.MNTH, STATION_RECORDS.AVG_PRCP AS AVG_MAX FROM STATION_RECORDS, MAX_RECORDS WHERE STATION_RECORDS.STATE = MAX_RECORDS.STATE AND STATION_RECORDS.AVG_PRCP = MAX_RECORDS.AVG_PRCP ORDER BY STATION_RECORDS.STATE");
@@ -126,9 +107,6 @@ public class Precipitation {
 		maxRecords=null;
 		stationRecords=null;
 		System.gc();
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 
 		Dataset<Row> minMaxRecords = sparkSession.sql(
 				"SELECT MIN_STATE_RECORDS.STATE, MIN_STATE_RECORDS.MNTH AS MIN_MNTH, MIN_STATE_RECORDS.AVG_MIN, MAX_STATE_RECORDS.MNTH AS MAX_MNTH, MAX_STATE_RECORDS.AVG_MAX FROM MIN_STATE_RECORDS, MAX_STATE_RECORDS WHERE MIN_STATE_RECORDS.STATE = MAX_STATE_RECORDS.STATE AND MIN_STATE_RECORDS.AVG_MIN<>0.00 AND MAX_STATE_RECORDS.AVG_MAX<>0.00");
@@ -136,17 +114,12 @@ public class Precipitation {
 		minStateRecords=null;
 		maxStateRecords=null;
 		System.gc();
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
+
 		Dataset<Row> avgDifference = sparkSession.sql(
 				"SELECT MMR.STATE, MMR.MIN_MNTH, MMR.AVG_MIN, MMR.MAX_MNTH, MMR.AVG_MAX, MMR.AVG_MAX-MMR.AVG_MIN AS DIFFERENCE FROM MIN_MAX_RECORDS AS MMR ORDER BY DIFFERENCE");
 		avgDifference.createTempView("AVG_DIFFERENCE");
 		minMaxRecords=null;
 		System.gc();
-		System.out.println("Total Memory: " + String.valueOf(Runtime.getRuntime().totalMemory()));
-		System.out.println("Max Memory: " + String.valueOf(Runtime.getRuntime().maxMemory()));
-		System.out.println("Free Memory: " + String.valueOf(Runtime.getRuntime().freeMemory()));
 //		avgDifference.show(9999);
 		PrintStream ps = new PrintStream(args[2]+"/precipitation-output.txt");
 		System.setOut(ps);
