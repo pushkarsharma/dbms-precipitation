@@ -22,7 +22,6 @@ import org.apache.spark.sql.types.StructType;
 public class Precipitation {
 	public static SparkSession sparkSession;
 
-	@SuppressWarnings("resource")
 	public static Dataset<Row> annualRecord(String recordingPath) throws IOException {
 		BufferedReader br = null;
 		String st;
