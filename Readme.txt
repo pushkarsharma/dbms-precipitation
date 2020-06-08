@@ -18,7 +18,7 @@ Description
 SparkSQL is used to compute the results. The following steps were performed to compute the results:
 
 1. STATION_RECORDS: The Locations dataset (WEATHER_STATIONS) is joined with the Recordings (RECORDS) on USAF and STN. Then the results is grouped by STATE, MNTH while taking the average of the Precipitation.
-2. MIN_RECORDS: From , minimum average precipitation value is extracted for each state.
+2. MIN_RECORDS: From table in STATION_RECORDS, minimum average precipitation value is extracted for each state.
 3. MAX_RECORDS: From table in STATION_RECORDS, maximum average precipitation value is extracted for each state.
 4. MIN_STATE_RECORDS: Table STATION_RECORDS and MIN_RECORDS are joined on STATE, AVG_PRCP to extract the minimum average precipitation month.
 5. MAX_STATE_RECORDS: Table STATION_RECORDS and MAX_RECORDS are joined on STATE, AVG_PRCP to extract the maximum average precipitation month.
